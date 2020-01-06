@@ -5,6 +5,7 @@ const app = require('../lib/app');
 const connect = require('../lib/utils/connect');
 const mongoose = require('mongoose');
 const Event = require('../lib/models/Event');
+const Recipe = require('../lib/models/Recipe');
 
 describe('event routes', () => {
   beforeAll(() => {
@@ -15,6 +16,20 @@ describe('event routes', () => {
     return mongoose.connection.dropDatabase();
   });
 
+  let recipe;
+
+  beforeEach(async() => {
+    recipe = await Recipe.create({
+      name: 'Scones',
+      directions: ['Cook the scone'],
+      ingredients: [{
+        name: 'scone',
+        amount: 1,
+        measurement: 'sconesworth'
+      }]
+    });
+  });
+
   afterAll(() => {
     return mongoose.connection.close();
   });
@@ -23,7 +38,7 @@ describe('event routes', () => {
     return request(app)
       .post('/api/v1/events')
       .send({
-        recipeId: '1234',
+        recipeId: recipe._id,
         dateOfEvent: Date.now(),
         notes: 'It went well',
         rating: 4
@@ -31,7 +46,7 @@ describe('event routes', () => {
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.any(String),
-          recipeId: '1234',
+          recipeId: recipe._id.toString(),
           dateOfEvent: expect.any(String),
           notes: 'It went well',
           rating: 4,
